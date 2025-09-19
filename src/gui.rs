@@ -172,12 +172,10 @@ fn build_ui(app: &Application) {
     ];
 
     for (button, op) in operation_buttons {
-        let display_clone = display.clone();
         let current_input_clone = current_input.clone();
         let first_number_clone = first_number.clone();
         let operation_clone = operation.clone();
         let waiting_for_operand_clone = waiting_for_operand.clone();
-        let calculator_clone = calculator.clone();
 
         button.connect_clicked(move |_| {
             let input = current_input_clone.borrow().clone();
@@ -213,7 +211,7 @@ fn build_ui(app: &Application) {
                             display_clone.set_text(&result_str);
                             current_input_clone.replace(result_str);
                         }
-                        Err(e) => {
+                        Err(_e) => {
                             display_clone.set_text("Error");
                             current_input_clone.replace("0".to_string());
                         }
