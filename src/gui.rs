@@ -197,11 +197,13 @@ fn build_ui(app: &Application) {
         let calculator_clone = calculator.clone();
 
         equals_btn.connect_clicked(move |_| {
-            if let Some(op) = operation_clone.borrow().as_ref() {
+            // Clone the operation to avoid borrowing conflicts
+            let op = operation_clone.borrow().clone();
+            if let Some(operation) = op {
                 let input = current_input_clone.borrow().clone();
                 if let Ok(second_number) = input.parse::<f64>() {
                     let first = *first_number_clone.borrow();
-                    match calculator_clone.calculate(first, second_number, op.clone()) {
+                    match calculator_clone.calculate(first, second_number, operation) {
                         Ok(result) => {
                             let result_str = if result.fract() == 0.0 {
                                 format!("{}", result as i64)
