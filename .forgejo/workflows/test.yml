@@ -19,8 +19,13 @@ jobs:
     - name: Setup Rust environment
       run: |
         curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-        . "$HOME/.cargo/env"
         rustc --version
         cargo --version
-    - run: cargo build
-    - run: cargo test
+    - name: Cargo Build
+      run: |
+        source "$HOME/.cargo/env"
+        cargo build
+    - name: Cargo Test
+      run: |
+        source "$HOME/.cargo/env"
+        cargo test
