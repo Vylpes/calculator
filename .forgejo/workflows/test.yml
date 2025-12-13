@@ -1,0 +1,21 @@
+name: Test
+
+on:
+  push:
+    branches:
+      - feature/*
+      - renovate/*
+      - dependabot/*
+      - copilot/*
+
+jobs:
+  build:
+    environment: stage
+
+    runs-on: rust
+
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions-rust-lang/setup-rust-toolchain@v1
+    - run: cargo build
+    - run: cargo test
