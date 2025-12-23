@@ -18,7 +18,7 @@ jobs:
     - uses: actions/checkout@v4
     - name: Setup System Packages
       run: |
-        sudo apt install -y \
+        apt install -y \
           pkg-config \
           build-essential \
           libpango1.0-dev \
