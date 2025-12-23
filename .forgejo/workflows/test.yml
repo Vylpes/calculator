@@ -24,10 +24,12 @@ jobs:
         cargo --version
     - name: Cargo Build
       run: |
+        source "$HOME/.bashrc"
         source "$HOME/.cargo/env"
         cargo build
     - name: Cargo Test
       run: |
+        source "$HOME/.bashrc"
         source "$HOME/.cargo/env"
         cargo test
 
