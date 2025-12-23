@@ -10,15 +10,24 @@ on:
 
 jobs:
   build:
+    environment: stage
+
     runs-on: rust
 
     steps:
     - uses: actions/checkout@v4
-    - name: Setup Rust
-      uses: https://github.com/actions-rust-lang/setup-rust-toolchain@v1
-      with:
-        components: rustfmt
-    - run: cargo build
-    - run: cargo test
-    - name: Rustfmt
-      uses: https://github.com/actions-rust-lang/rustfmt@v1
+    - name: Setup Rust environment
+      run: |
+        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+        source "$HOME/.cargo/env"
+        rustc --version
+        cargo --version
+    - name: Cargo Build
+      run: |
+        source "$HOME/.cargo/env"
+        cargo build
+    - name: Cargo Test
+      run: |
+        source "$HOME/.cargo/env"
+        cargo test
+
