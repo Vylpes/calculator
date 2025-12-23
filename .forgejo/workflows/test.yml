@@ -16,20 +16,33 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+    - name: Setup System Packages
+      run: |
+        sudo apt install -y \
+          pkg-config \
+          build-essential \
+          libpango1.0-dev \
+          libpangocairo-1.0-0 \
+          libcairo2-dev \
+          libglib2.0-dev || true
+      shell: bash
     - name: Setup Rust environment
       run: |
         curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
         source "$HOME/.cargo/env"
+        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
         rustc --version
         cargo --version
+        ls -lah $HOME/.cargo || true
+      shell: bash
     - name: Cargo Build
       run: |
-        source "$HOME/.bashrc"
         source "$HOME/.cargo/env"
         cargo build
+      shell: bash
     - name: Cargo Test
       run: |
-        source "$HOME/.bashrc"
         source "$HOME/.cargo/env"
         cargo test
+      shell: bash
 
