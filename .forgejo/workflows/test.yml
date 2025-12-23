@@ -15,7 +15,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Setup Rust
-      uses: https://github.com/hecrj/setup-rust-actions@v2
+      uses: https://github.com/hecrj/setup-rust-action@v2
       with:
         rust-version: stable
     - run: cargo build
