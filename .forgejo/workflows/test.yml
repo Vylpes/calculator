@@ -10,17 +10,13 @@ on:
 
 jobs:
   build:
-    environment: stage
-
     runs-on: rust
 
     steps:
     - uses: actions/checkout@v4
     - name: Setup Rust
-      uses: https://github.com/actions-rust-lang/setup-rust-toolchain@v1
+      uses: https://github.com/hecrj/setup-rust-actions@v2
       with:
-        components: rustfmt
+        rust-version: stable
     - run: cargo build
     - run: cargo test
-    - name: Rustfmt
-      uses: https://github.com/actions-rust-lang/rustfmt@v1
