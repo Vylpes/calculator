@@ -1,0 +1,51 @@
+name: Stage
+
+on:
+  push:
+    branches:
+      - master
+      - develop
+      - release/*
+      - hotfix/*
+
+jobs:
+  build:
+    environment: stage
+
+    runs-on: rust
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup System Packages
+      run: |
+        apt update -y
+        apt install -y \
+          pkg-config \
+          build-essential \
+          libpango1.0-dev \
+          libpangocairo-1.0-0 \
+          libcairo2-dev \
+          libglib2.0-dev \
+          libgtk-4-dev
+      shell: bash
+    - name: Setup Rust environment
+      run: |
+        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+        source "$HOME/.cargo/env"
+        rustc --version
+        cargo --version
+    - name: Cargo Build
+      run: |
+        source "$HOME/.cargo/env"
+        cargo build --release
+    - name: Cargo Test
+      run: |
+        source "$HOME/.cargo/env"
+        cargo test --release
+    - name: Upload Binary
+      uses: actions/upload-artifact@v3
+      with:
+          name: calculator-${{ github.run_id }}
+          path: target/release/calculator-app
+          if-no-files-found: error
+
