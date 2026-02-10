@@ -1,4 +1,4 @@
-use calculator_app::calculator::{Calculator, CalculatorError};
+use vyxcalc::calculator::{Calculator, CalculatorError};
 
 #[test]
 fn test_basic_arithmetic() {
