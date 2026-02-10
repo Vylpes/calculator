@@ -46,6 +46,6 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
           name: calculator-${{ github.run_id }}
-          path: target/release/calculator-app
+          path: target/release/vyxcalc
           if-no-files-found: error
 
