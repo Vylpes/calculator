@@ -11,41 +11,42 @@ on:
 jobs:
   build:
     environment: stage
-
+    container: rust:latest
     runs-on: rust
 
     steps:
     - uses: actions/checkout@v4
     - name: Setup System Packages
+      shell: bash
       run: |
+        set -euo pipefail
         apt update -y
         apt install -y \
           pkg-config \
           build-essential \
+          curl \
           libpango1.0-dev \
           libpangocairo-1.0-0 \
           libcairo2-dev \
           libglib2.0-dev \
           libgtk-4-dev
       shell: bash
-    - name: Setup Rust environment
-      run: |
-        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-        source "$HOME/.cargo/env"
-        rustc --version
-        cargo --version
     - name: Cargo Build
+      shell: bash
       run: |
+        set -euo pipefail
         source "$HOME/.cargo/env"
         cargo build --release
     - name: Cargo Test
+      shell: bash
       run: |
+        set -euo pipefail
         source "$HOME/.cargo/env"
         cargo test --release
     - name: Upload Binary
       uses: actions/upload-artifact@v3
       with:
-          name: calculator-${{ github.run_id }}
+          name: vyxcalc-${{ github.run_id }}
           path: target/release/vyxcalc
           if-no-files-found: error
 
