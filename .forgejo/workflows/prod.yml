@@ -76,7 +76,7 @@ jobs:
         run: |
           set -euo pipefail
           cd build
-          chmod +x ../artifact/calculator-app
+          chmod +x ../artifact/vyxcalc
           useradd -m builder
           chown -R builder:builder .
           su builder -c 'makepkg --skipinteg'
