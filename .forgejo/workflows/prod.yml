@@ -8,7 +8,6 @@ on:
 jobs:
   build:
     environment: prod
-    container: rust:latest
     runs-on: rust
 
     steps:
