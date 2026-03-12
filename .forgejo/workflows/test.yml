@@ -30,7 +30,6 @@ jobs:
           libcairo2-dev \
           libglib2.0-dev \
           libgtk-4-dev
-      shell: bash
     - name: Cargo Build
       shell: bash
       run: |
