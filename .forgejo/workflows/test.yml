@@ -40,12 +40,10 @@ jobs:
       shell: bash
       run: |
         set -euo pipefail
-        source "$HOME/.cargo/env"
         cargo build
     - name: Cargo Test
       shell: bash
       run: |
         set -euo pipefail
-        source "$HOME/.cargo/env"
         cargo test
 
