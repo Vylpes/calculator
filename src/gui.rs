@@ -9,7 +9,11 @@ const APP_ID: &str = "org.example.CalculatorApp";
 pub fn run_gui_mode() -> glib::ExitCode {
     let app = Application::builder().application_id(APP_ID).build();
     app.connect_activate(build_ui);
-    app.run()
+    // Clap already consumed argv (e.g. "gui"). Passing those through to
+    // GApplication makes it treat leftover args as files to open and fail with
+    // "This application can not open files". Only forward the program name.
+    let program = std::env::args().next().unwrap_or_else(|| "calculator-app".to_string());
+    app.run_with_args(&[program])
 }
 
 fn build_ui(app: &Application) {
