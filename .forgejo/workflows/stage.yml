@@ -3,7 +3,7 @@ name: Stage
 on:
   push:
     branches:
-      - master
+      - main
       - develop
       - release/*
       - hotfix/*
