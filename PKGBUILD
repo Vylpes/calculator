@@ -21,5 +21,5 @@ prepare() {
 
 package() {
     install -Dm755 "${srcdir}/vyxcalc" "${pkgdir}/usr/bin/vyxcalc"
-    install -Dm644 "${srcdir}/../LICENSE" "${pkgdir}/usr/share/licenses/$pkgname/LICENSE"
+    install -Dm644 "${startdir}/LICENSE" "${pkgdir}/usr/share/licenses/$pkgname/LICENSE"
 }
