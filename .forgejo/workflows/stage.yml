@@ -15,12 +15,6 @@ jobs:
     runs-on: rust
 
     steps:
-    - name: Use Node.js
-      shell: bash
-      run: |
-        set -euo pipefail
-        curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
-        apt install -y nodejs
     - uses: actions/checkout@v4
     - name: Setup System Packages
       shell: bash
@@ -36,6 +30,13 @@ jobs:
           libcairo2-dev \
           libglib2.0-dev \
           libgtk-4-dev
+    - name: Sync PKGBUILD version
+      shell: bash
+      run: |
+        set -euo pipefail
+        VERSION=$(sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml | head -n1)
+        sed -i "s/^pkgver=.*/pkgver=${VERSION}/" PKGBUILD
+        echo "PKGBUILD pkgver set to ${VERSION}"
     - name: Cargo Build
       shell: bash
       run: |
@@ -52,4 +53,3 @@ jobs:
           name: vyxcalc-${{ github.run_id }}
           path: target/release/vyxcalc
           if-no-files-found: error
-
