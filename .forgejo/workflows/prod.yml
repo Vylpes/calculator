@@ -12,12 +12,6 @@ jobs:
     runs-on: rust
 
     steps:
-    - name: Use Node.js
-      shell: bash
-      run: |
-        set -euo pipefail
-        curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
-        apt install -y nodejs
     - uses: actions/checkout@v4
     - name: Setup System Packages
       shell: bash
@@ -27,6 +21,7 @@ jobs:
         apt install -y \
           pkg-config \
           build-essential \
+          curl \
           libpango1.0-dev \
           libpangocairo-1.0-0 \
           libcairo2-dev \
@@ -72,7 +67,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p build
-          cp PKGBUILD build/PKGBUILD
+          cp PKGBUILD LICENSE build/
           cd build
           sed -i "s/^pkgver=.*/pkgver=${GITHUB_REF_NAME#v}/" PKGBUILD
       - name: Build Package
@@ -102,5 +97,5 @@ jobs:
           PKG_FILE=$(ls build/*.pkg.tar.zst | head -n 1)
           curl -X POST \
             -H "Authorization: token ${{ secrets.FORGEJO_TOKEN }}" \
-                                                                  -F "attachment=@$PKG_FILE" \
-                                                                  ${{ vars.FORGEJO_URL }}/api/v1/repos/${{ github.repository }}/releases/${{ steps.create_release.outputs.release_id }}/assets
+            -F "attachment=@$PKG_FILE" \
+            ${{ vars.FORGEJO_URL }}/api/v1/repos/${{ github.repository }}/releases/${{ steps.create_release.outputs.release_id }}/assets
