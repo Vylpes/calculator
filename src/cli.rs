@@ -3,7 +3,7 @@ use std::io::{self, Write};
 use crate::calculator::Calculator;
 
 #[derive(Parser)]
-#[command(name = "calculator-app")]
+#[command(name = "vyxcalc")]
 #[command(about = "A calculator app with CLI and GUI modes")]
 pub struct Cli {
     #[command(subcommand)]

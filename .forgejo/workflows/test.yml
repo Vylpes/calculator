@@ -1,0 +1,49 @@
+name: Test
+
+on:
+  push:
+    branches:
+      - cursor/*
+      - feature/*
+      - renovate/*
+      - dependabot/*
+      - copilot/*
+
+jobs:
+  build:
+    environment: stage
+    container: rust:latest
+    runs-on: rust
+
+    steps:
+    - name: Use Node.js
+      shell: bash
+      run: |
+        set -euo pipefail
+        curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+        apt install -y nodejs
+    - uses: actions/checkout@v4
+    - name: Setup System Packages
+      shell: bash
+      run: |
+        set -euo pipefail
+        apt update -y
+        apt install -y \
+          pkg-config \
+          build-essential \
+          curl \
+          libpango1.0-dev \
+          libpangocairo-1.0-0 \
+          libcairo2-dev \
+          libglib2.0-dev \
+          libgtk-4-dev
+    - name: Cargo Build
+      shell: bash
+      run: |
+        set -euo pipefail
+        cargo build
+    - name: Cargo Test
+      shell: bash
+      run: |
+        set -euo pipefail
+        cargo test

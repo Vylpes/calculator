@@ -1,0 +1,112 @@
+name: Production
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  build:
+    environment: prod
+    container: rust:latest
+    runs-on: rust
+
+    steps:
+    - name: Use Node.js
+      shell: bash
+      run: |
+        set -euo pipefail
+        curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+        apt install -y nodejs
+    - uses: actions/checkout@v4
+    - name: Setup System Packages
+      shell: bash
+      run: |
+        set -euo pipefail
+        apt update -y
+        apt install -y \
+          pkg-config \
+          build-essential \
+          curl \
+          libpango1.0-dev \
+          libpangocairo-1.0-0 \
+          libcairo2-dev \
+          libglib2.0-dev \
+          libgtk-4-dev
+    - name: Cargo Build
+      shell: bash
+      run: |
+        set -euo pipefail
+        cargo build --release
+    - name: Cargo Test
+      shell: bash
+      run: |
+        set -euo pipefail
+        cargo test --release
+    - name: Upload Binary
+      uses: actions/upload-artifact@v3
+      with:
+          name: vyxcalc-${{ github.run_id }}
+          path: target/release/vyxcalc
+          if-no-files-found: error
+
+  publish:
+    needs: [build]
+    runs-on: rust
+    container: archlinux:latest
+    environment: prod
+
+    steps:
+      - name: Use Node.js
+        shell: bash
+        run: |
+          set -euo pipefail
+          pacman -Sy --noconfirm nodejs npm
+      - uses: actions/checkout@v4
+      - name: Download Binary
+        uses: actions/download-artifact@v3
+        with:
+          name: vyxcalc-${{ github.run_id }}
+          path: ./artifact
+      - name: Install Dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          pacman -Sy --noconfirm base-devel curl jq
+      - name: Prepare Build Directory
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p build
+          cp PKGBUILD LICENSE build/
+          cd build
+          sed -i "s/^pkgver=.*/pkgver=${GITHUB_REF_NAME#v}/" PKGBUILD
+      - name: Build Package
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd build
+          chmod +x ../artifact/vyxcalc
+          useradd -m builder
+          chown -R builder:builder .
+          su builder -c 'makepkg --skipinteg'
+      - name: Create Release
+        id: create_release
+        shell: bash
+        run: |
+          set -euo pipefail
+          RELEASE_ID=$(curl -X POST \
+            -H "Authorization: token ${{ secrets.FORGEJO_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d "{\"tag_name\":\"${{ github.ref_name }}\",\"name\":\"Release ${{ github.ref_name }}\",\"body\":\"Release ${{ github.ref_name }}\"}" \
+            ${{ vars.FORGEJO_URL }}/api/v1/repos/${{ github.repository }}/releases | jq -r '.id')
+          echo "release_id=$RELEASE_ID" >> $GITHUB_OUTPUT
+      - name: Upload Package To Repo
+        shell: bash
+        run: |
+          set -euo pipefail
+          PKG_FILE=$(ls build/*.pkg.tar.zst | head -n 1)
+          curl -X POST \
+            -H "Authorization: token ${{ secrets.FORGEJO_TOKEN }}" \
+            -F "attachment=@$PKG_FILE" \
+            ${{ vars.FORGEJO_URL }}/api/v1/repos/${{ github.repository }}/releases/${{ steps.create_release.outputs.release_id }}/assets

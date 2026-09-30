@@ -1,4 +1,4 @@
-# Calculator App
+# Calculator (Vyxcalc)
 
 A desktop calculator application written in Rust with both CLI and GUI modes.
 
@@ -29,13 +29,13 @@ cargo build --release
 
 #### Direct Expression Evaluation
 ```bash
-./target/release/calculator-app cli "2 + 3"
+./target/release/vyxcalc cli "2 + 3"
 # Output: 5
 
-./target/release/calculator-app cli "10 / 2"
+./target/release/vyxcalc cli "10 / 2"
 # Output: 5
 
-./target/release/calculator-app cli "5 * 7"
+./target/release/vyxcalc cli "5 * 7"
 # Output: 35
 ```
 
@@ -58,9 +58,9 @@ Goodbye!
 ### GUI Mode
 
 ```bash
-./target/release/calculator-app gui
+./target/release/vyxcalc gui
 # or simply
-./target/release/calculator-app
+./target/release/vyxcalc
 ```
 
 This opens a graphical calculator window with:

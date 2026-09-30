@@ -4,7 +4,7 @@ use std::rc::Rc;
 use std::cell::RefCell;
 use crate::calculator::{Calculator, Operation};
 
-const APP_ID: &str = "org.example.CalculatorApp";
+const APP_ID: &str = "com.vylpes.vyxcalc";
 
 pub fn run_gui_mode() -> glib::ExitCode {
     let app = Application::builder().application_id(APP_ID).build();
