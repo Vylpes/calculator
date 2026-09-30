@@ -16,6 +16,12 @@ jobs:
     runs-on: rust
 
     steps:
+    - name: Use Node.js
+      shell: bash
+      run: |
+        set -euo pipefail
+        curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+        apt install -y nodejs
     - uses: actions/checkout@v4
     - name: Setup System Packages
       shell: bash
