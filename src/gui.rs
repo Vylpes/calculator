@@ -1,6 +1,6 @@
 use gtk4::prelude::*;
 use gtk4::{
-    glib, Application, ApplicationWindow, Box, Button, CssProvider, Entry, IconTheme, Label,
+    glib, Application, ApplicationWindow, Box, Button, CssProvider, Entry, Grid, IconTheme,
     Orientation, Window,
 };
 use std::cell::RefCell;
@@ -64,16 +64,6 @@ window {
 .calc-btn-clear {
     color: #FF9800;
     border: 1px solid rgba(255, 152, 0, 0.35);
-}
-
-.calc-btn-blank,
-.calc-btn-blank:hover,
-.calc-btn-blank:active,
-.calc-btn-blank:disabled {
-    background: #FFFFFF;
-    color: transparent;
-    opacity: 1;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.10);
 }
 
 .calc-btn-equals-primary {
@@ -193,86 +183,60 @@ fn build_ui(app: &Application) {
     gtk4::prelude::EditableExt::set_alignment(&display, 1.0);
     vbox.append(&display);
 
-    let button_box = Box::new(Orientation::Vertical, 10);
-
-    // Row 1: C / * -
-    let row1 = Box::new(Orientation::Horizontal, 10);
-    row1.set_homogeneous(true);
+    // Grid layout:
+    // C  /  *  -
+    // 7  8  9  +
+    // 4  5  6  +  (+ is double-tall)
+    // 1  2  3  =
+    // 0----- .  =  (0 double-wide, = double-tall)
+    let grid = Grid::new();
+    grid.set_row_spacing(10);
+    grid.set_column_spacing(10);
+    grid.set_row_homogeneous(true);
+    grid.set_column_homogeneous(true);
 
     let clear_btn = styled_button("C", &["calc-btn-clear"]);
     let divide_btn = styled_button("/", &[]);
     let multiply_btn = styled_button("*", &[]);
     let subtract_btn = styled_button("-", &[]);
-
-    row1.append(&clear_btn);
-    row1.append(&divide_btn);
-    row1.append(&multiply_btn);
-    row1.append(&subtract_btn);
-    button_box.append(&row1);
-
-    // Row 2: 7 8 9 +
-    let row2 = Box::new(Orientation::Horizontal, 10);
-    row2.set_homogeneous(true);
-
     let btn7 = styled_button("7", &[]);
     let btn8 = styled_button("8", &[]);
     let btn9 = styled_button("9", &[]);
     let add_btn = styled_button("+", &[]);
-
-    row2.append(&btn7);
-    row2.append(&btn8);
-    row2.append(&btn9);
-    row2.append(&add_btn);
-    button_box.append(&row2);
-
-    // Row 3: 4 5 6 [blank]
-    let row3 = Box::new(Orientation::Horizontal, 10);
-    row3.set_homogeneous(true);
-
     let btn4 = styled_button("4", &[]);
     let btn5 = styled_button("5", &[]);
     let btn6 = styled_button("6", &[]);
-    let blank_btn = styled_button("", &["calc-btn-blank"]);
-    blank_btn.set_sensitive(false);
-    blank_btn.set_can_focus(false);
-
-    row3.append(&btn4);
-    row3.append(&btn5);
-    row3.append(&btn6);
-    row3.append(&blank_btn);
-    button_box.append(&row3);
-
-    // Row 4: 1 2 3 =
-    let row4 = Box::new(Orientation::Horizontal, 10);
-    row4.set_homogeneous(true);
-
     let btn1 = styled_button("1", &[]);
     let btn2 = styled_button("2", &[]);
     let btn3 = styled_button("3", &[]);
-    let equals_btn = styled_button("=", &[]);
-
-    row4.append(&btn1);
-    row4.append(&btn2);
-    row4.append(&btn3);
-    row4.append(&equals_btn);
-    button_box.append(&row4);
-
-    // Row 5: 0 . [spacer] = (primary)
-    let row5 = Box::new(Orientation::Horizontal, 10);
-    row5.set_homogeneous(true);
-
     let btn0 = styled_button("0", &[]);
     let dot_btn = styled_button(".", &[]);
-    let spacer = Label::new(None);
-    let equals_primary_btn = styled_button("=", &["calc-btn-equals-primary"]);
+    let equals_btn = styled_button("=", &["calc-btn-equals-primary"]);
 
-    row5.append(&btn0);
-    row5.append(&dot_btn);
-    row5.append(&spacer);
-    row5.append(&equals_primary_btn);
-    button_box.append(&row5);
+    // attach(child, column, row, width, height)
+    grid.attach(&clear_btn, 0, 0, 1, 1);
+    grid.attach(&divide_btn, 1, 0, 1, 1);
+    grid.attach(&multiply_btn, 2, 0, 1, 1);
+    grid.attach(&subtract_btn, 3, 0, 1, 1);
 
-    vbox.append(&button_box);
+    grid.attach(&btn7, 0, 1, 1, 1);
+    grid.attach(&btn8, 1, 1, 1, 1);
+    grid.attach(&btn9, 2, 1, 1, 1);
+    grid.attach(&add_btn, 3, 1, 1, 2); // + double-tall
+
+    grid.attach(&btn4, 0, 2, 1, 1);
+    grid.attach(&btn5, 1, 2, 1, 1);
+    grid.attach(&btn6, 2, 2, 1, 1);
+
+    grid.attach(&btn1, 0, 3, 1, 1);
+    grid.attach(&btn2, 1, 3, 1, 1);
+    grid.attach(&btn3, 2, 3, 1, 1);
+    grid.attach(&equals_btn, 3, 3, 1, 2); // = double-tall
+
+    grid.attach(&btn0, 0, 4, 2, 1); // 0 double-wide
+    grid.attach(&dot_btn, 2, 4, 1, 1);
+
+    vbox.append(&grid);
     window.set_child(Some(&vbox));
 
     // Number button connections
@@ -386,10 +350,6 @@ fn build_ui(app: &Application) {
     {
         let evaluate = evaluate.clone();
         equals_btn.connect_clicked(move |_| evaluate());
-    }
-    {
-        let evaluate = evaluate.clone();
-        equals_primary_btn.connect_clicked(move |_| evaluate());
     }
 
     // Clear button
