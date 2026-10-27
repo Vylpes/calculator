@@ -1,12 +1,16 @@
 use gtk4::prelude::*;
 use gtk4::{
-    glib, Application, ApplicationWindow, Box, Button, CssProvider, Entry, Label, Orientation,
+    glib, Application, ApplicationWindow, Box, Button, CssProvider, Entry, IconTheme, Label,
+    Orientation, Window,
 };
 use std::cell::RefCell;
+use std::path::PathBuf;
 use std::rc::Rc;
 use crate::calculator::{Calculator, Operation};
 
 const APP_ID: &str = "com.vylpes.vyxcalc";
+const ICON_NAME: &str = "com.vylpes.vyxcalc";
+const ICON_PNG: &[u8] = include_bytes!("../assets/icon.png");
 
 const STYLE: &str = r#"
 window {
@@ -111,6 +115,40 @@ fn load_css() {
     }
 }
 
+fn cache_dir() -> PathBuf {
+    if let Some(xdg) = std::env::var_os("XDG_CACHE_HOME") {
+        return PathBuf::from(xdg);
+    }
+    if let Some(home) = std::env::var_os("HOME") {
+        return PathBuf::from(home).join(".cache");
+    }
+    std::env::temp_dir()
+}
+
+/// GTK4 windows use icon-name (looked up in the icon theme). Embed the PNG in
+/// the binary and expose it via a local hicolor search path.
+fn setup_window_icon(window: &ApplicationWindow) {
+    let Some(display) = gtk4::gdk::Display::default() else {
+        return;
+    };
+
+    let icon_root = cache_dir().join("vyxcalc/icons");
+    let apps_dir = icon_root.join("hicolor/128x128/apps");
+    if std::fs::create_dir_all(&apps_dir).is_err() {
+        return;
+    }
+
+    let icon_path = apps_dir.join(format!("{ICON_NAME}.png"));
+    if std::fs::write(&icon_path, ICON_PNG).is_err() {
+        return;
+    }
+
+    let theme = IconTheme::for_display(&display);
+    theme.add_search_path(&icon_root);
+    Window::set_default_icon_name(ICON_NAME);
+    window.set_icon_name(Some(ICON_NAME));
+}
+
 fn styled_button(label: &str, classes: &[&str]) -> Button {
     let button = Button::with_label(label);
     button.add_css_class("calc-btn");
@@ -138,6 +176,7 @@ fn build_ui(app: &Application) {
         .default_width(300)
         .resizable(false)
         .build();
+    setup_window_icon(&window);
 
     let vbox = Box::new(Orientation::Vertical, 12);
     vbox.add_css_class("calc-root");
