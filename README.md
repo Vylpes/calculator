@@ -57,7 +57,7 @@ Use Up/Down arrow keys to cycle through this session's history
 Goodbye!
 ```
 
-In interactive mode, Up and Down cycle through successful expressions from the current session so you can edit and re-run them. History is not kept after the session ends. Empty lines and invalid expressions are not stored.
+In interactive mode, Up and Down cycle through expressions from the current session so you can edit and re-run them (including fixing invalid input). History is not kept after the session ends. Empty lines are not stored.
 
 ### GUI Mode
 

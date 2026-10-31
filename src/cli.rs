@@ -65,14 +65,13 @@ fn run_interactive_mode(calculator: &Calculator) -> Result<(), Box<dyn std::erro
                     break;
                 }
 
+                // Save before evaluate so invalid input can be recalled and fixed.
+                if history.save(input) {
+                    let _ = rl.add_history_entry(input);
+                }
+
                 match calculator.evaluate(input) {
-                    Ok(result) => {
-                        // Only successful expressions are recalled (not blanks/errors).
-                        if history.save(input) {
-                            let _ = rl.add_history_entry(input);
-                        }
-                        println!("= {}", result);
-                    }
+                    Ok(result) => println!("= {}", result),
                     Err(e) => eprintln!("{}", e),
                 }
             }

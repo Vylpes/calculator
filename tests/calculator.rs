@@ -55,6 +55,16 @@ fn test_session_history_skips_empty_submissions() {
 }
 
 #[test]
+fn test_session_history_keeps_invalid_expressions() {
+    let mut history = SessionHistory::new();
+    history.save("2 +");
+    history.save("3 + 3");
+
+    assert_eq!(history.previous(), Some("3 + 3"));
+    assert_eq!(history.previous(), Some("2 +"));
+}
+
+#[test]
 fn test_session_history_is_session_scoped() {
     let mut first = SessionHistory::new();
     first.save("7 - 1");

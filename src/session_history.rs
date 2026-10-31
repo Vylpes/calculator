@@ -30,6 +30,7 @@ impl SessionHistory {
     /// Whether `input` should be recorded in session history.
     ///
     /// Empty / whitespace-only lines and quit/exit commands are not stored.
+    /// Invalid expressions are stored so they can be recalled and fixed.
     pub fn should_record(input: &str) -> bool {
         let trimmed = input.trim();
         !trimmed.is_empty() && trimmed != "quit" && trimmed != "exit"
@@ -170,14 +171,11 @@ mod tests {
     }
 
     #[test]
-    fn up_recalls_latest_meaningful_entry_only() {
-        // CLI skips calling save() for invalid expressions; history then
-        // behaves as if only successful inputs were recorded.
+    fn up_recalls_invalid_expressions_for_editing() {
         let mut history = SessionHistory::new();
-        // "2 +" was invalid — not saved
+        history.save("2 +");
         history.save("3 + 3");
         assert_eq!(history.previous(), Some("3 + 3"));
-        assert_eq!(history.previous(), Some("3 + 3"));
-        assert_eq!(history.len(), 1);
+        assert_eq!(history.previous(), Some("2 +"));
     }
 }
