@@ -5,6 +5,7 @@ A desktop calculator application written in Rust with both CLI and GUI modes.
 ## Features
 
 - **CLI Mode**: Command-line interface with direct expression evaluation and interactive mode
+- **Session History**: In interactive CLI mode, use Up/Down to recall expressions from the current session
 - **GUI Mode**: Graphical calculator interface built with GTK4
 - **Basic Operations**: Addition (+), Subtraction (-), Multiplication (*), Division (/)
 - **Error Handling**: Proper error messages for invalid input and division by zero
@@ -41,12 +42,13 @@ cargo build --release
 
 #### Interactive Mode
 ```bash
-./target/release/calculator-app cli
+./target/release/vyxcalc cli
 ```
 This will start an interactive session where you can enter multiple expressions:
 ```
 Calculator CLI - Interactive Mode
 Enter expressions like '2 + 3' or 'quit' to exit
+Use Up/Down arrow keys to cycle through this session's history
 > 2 + 3
 = 5
 > 10 - 4
@@ -54,6 +56,8 @@ Enter expressions like '2 + 3' or 'quit' to exit
 > quit
 Goodbye!
 ```
+
+In interactive mode, Up and Down cycle through expressions from the current session so you can edit and re-run them (including fixing invalid input). History is not kept after the session ends. Empty lines are not stored.
 
 ### GUI Mode
 
@@ -97,5 +101,6 @@ cargo test
 ## Dependencies
 
 - [clap](https://crates.io/crates/clap) - Command line argument parsing
+- [rustyline](https://crates.io/crates/rustyline) - Interactive CLI line editing and session history
 - [gtk4](https://crates.io/crates/gtk4) - GUI framework
 - [glib](https://crates.io/crates/glib) - GLib bindings for Rust

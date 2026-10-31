@@ -1,6 +1,8 @@
 use clap::{Parser, Subcommand};
-use std::io::{self, Write};
+use rustyline::error::ReadlineError;
+use rustyline::DefaultEditor;
 use crate::calculator::Calculator;
+use crate::session_history::SessionHistory;
 
 #[derive(Parser)]
 #[command(name = "vyxcalc")]
@@ -33,35 +35,59 @@ pub fn run_cli_mode(expression: Option<String>) -> Result<(), Box<dyn std::error
             }
         }
         None => {
-            // Interactive mode
-            println!("Calculator CLI - Interactive Mode");
-            println!("Enter expressions like '2 + 3' or 'quit' to exit");
-            
-            loop {
-                print!("> ");
-                io::stdout().flush()?;
-                
-                let mut input = String::new();
-                io::stdin().read_line(&mut input)?;
-                
-                let input = input.trim();
-                
+            run_interactive_mode(&calculator)?;
+        }
+    }
+    
+    Ok(())
+}
+
+fn run_interactive_mode(calculator: &Calculator) -> Result<(), Box<dyn std::error::Error>> {
+    println!("Calculator CLI - Interactive Mode");
+    println!("Enter expressions like '2 + 3' or 'quit' to exit");
+    println!("Use Up/Down arrow keys to cycle through this session's history");
+
+    // In-memory history only: do not load or save a history file.
+    let mut rl = DefaultEditor::new()?;
+    let mut history = SessionHistory::new();
+
+    loop {
+        match rl.readline("> ") {
+            Ok(line) => {
+                let input = line.trim();
+
                 if input.is_empty() {
                     continue;
                 }
-                
+
                 if input == "quit" || input == "exit" {
                     println!("Goodbye!");
                     break;
                 }
-                
+
+                // Save before evaluate so invalid input can be recalled and fixed.
+                if history.save(input) {
+                    let _ = rl.add_history_entry(input);
+                }
+
                 match calculator.evaluate(input) {
                     Ok(result) => println!("= {}", result),
                     Err(e) => eprintln!("{}", e),
                 }
             }
+            Err(ReadlineError::Interrupted) => {
+                println!("^C");
+                continue;
+            }
+            Err(ReadlineError::Eof) => {
+                println!("Goodbye!");
+                break;
+            }
+            Err(err) => {
+                return Err(Box::new(err));
+            }
         }
     }
-    
+
     Ok(())
 }
