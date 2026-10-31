@@ -25,6 +25,18 @@ impl fmt::Display for CalculatorError {
     }
 }
 
+impl Operation {
+    fn from_str(token: &str) -> Option<Operation> {
+        match token {
+            "+" => Some(Operation::Add),
+            "-" => Some(Operation::Subtract),
+            "*" => Some(Operation::Multiply),
+            "/" => Some(Operation::Divide),
+            _ => None,
+        }
+    }
+}
+
 pub struct Calculator;
 
 impl Calculator {
@@ -34,31 +46,31 @@ impl Calculator {
 
     pub fn evaluate(&self, expression: &str) -> Result<f64, CalculatorError> {
         let expression = expression.trim();
-        
-        // Simple parser for basic arithmetic expressions like "2 + 3"
         let parts: Vec<&str> = expression.split_whitespace().collect();
-        
-        if parts.len() != 3 {
+
+        // Expect "number operator number [operator number]..." (odd length, >= 3)
+        if parts.len() < 3 || parts.len() % 2 == 0 {
             return Err(CalculatorError::InvalidExpression);
         }
 
-        let left = parts[0].parse::<f64>()
+        let mut result = parts[0]
+            .parse::<f64>()
             .map_err(|_| CalculatorError::InvalidNumber(parts[0].to_string()))?;
-        
-        let operator = parts[1];
-        
-        let right = parts[2].parse::<f64>()
-            .map_err(|_| CalculatorError::InvalidNumber(parts[2].to_string()))?;
 
-        let operation = match operator {
-            "+" => Operation::Add,
-            "-" => Operation::Subtract,
-            "*" => Operation::Multiply,
-            "/" => Operation::Divide,
-            _ => return Err(CalculatorError::InvalidExpression),
-        };
+        let mut i = 1;
+        while i < parts.len() {
+            let operation = Operation::from_str(parts[i])
+                .ok_or(CalculatorError::InvalidExpression)?;
 
-        self.calculate(left, right, operation)
+            let right = parts[i + 1]
+                .parse::<f64>()
+                .map_err(|_| CalculatorError::InvalidNumber(parts[i + 1].to_string()))?;
+
+            result = self.calculate(result, right, operation)?;
+            i += 2;
+        }
+
+        Ok(result)
     }
 
     pub fn calculate(&self, left: f64, right: f64, operation: Operation) -> Result<f64, CalculatorError> {
@@ -76,4 +88,3 @@ impl Calculator {
         }
     }
 }
-

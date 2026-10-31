@@ -287,6 +287,58 @@ fn build_ui(app: &Application) {
         });
     }
 
+    // Apply an operator, evaluating any pending left-to-right chain first.
+    let apply_operation = {
+        let display = display.clone();
+        let current_input = current_input.clone();
+        let first_number = first_number.clone();
+        let operation = operation.clone();
+        let waiting_for_operand = waiting_for_operand.clone();
+        let calculator = calculator.clone();
+
+        Rc::new(move |next_op: Operation| {
+            let input = current_input.borrow().clone();
+            let Ok(number) = input.parse::<f64>() else {
+                return;
+            };
+
+            // If an operation is pending and a new operand was entered, fold it in
+            // left-to-right before starting the next operation.
+            if !*waiting_for_operand.borrow() {
+                if let Some(pending) = operation.borrow().clone() {
+                    match calculator.calculate(*first_number.borrow(), number, pending) {
+                        Ok(result) => {
+                            let result_str = if result.fract() == 0.0 {
+                                format!("{}", result as i64)
+                            } else {
+                                format!("{}", result)
+                            };
+                            display.set_text(&result_str);
+                            current_input.replace(result_str);
+                            *first_number.borrow_mut() = result;
+                        }
+                        Err(_) => {
+                            display.set_text("Error");
+                            current_input.replace("0".to_string());
+                            *first_number.borrow_mut() = 0.0;
+                            *operation.borrow_mut() = None;
+                            *waiting_for_operand.borrow_mut() = true;
+                            return;
+                        }
+                    }
+                } else {
+                    *first_number.borrow_mut() = number;
+                }
+            } else if operation.borrow().is_none() {
+                *first_number.borrow_mut() = number;
+            }
+            // else: consecutive operators — keep first_number, replace pending op
+
+            *operation.borrow_mut() = Some(next_op);
+            *waiting_for_operand.borrow_mut() = true;
+        })
+    };
+
     // Operation buttons
     let operation_buttons = vec![
         (&add_btn, Operation::Add),
@@ -296,19 +348,8 @@ fn build_ui(app: &Application) {
     ];
 
     for (button, op) in operation_buttons {
-        let current_input_clone = current_input.clone();
-        let first_number_clone = first_number.clone();
-        let operation_clone = operation.clone();
-        let waiting_for_operand_clone = waiting_for_operand.clone();
-
-        button.connect_clicked(move |_| {
-            let input = current_input_clone.borrow().clone();
-            if let Ok(number) = input.parse::<f64>() {
-                *first_number_clone.borrow_mut() = number;
-                *operation_clone.borrow_mut() = Some(op.clone());
-                *waiting_for_operand_clone.borrow_mut() = true;
-            }
-        });
+        let apply_operation = apply_operation.clone();
+        button.connect_clicked(move |_| apply_operation(op.clone()));
     }
 
     let evaluate = {
@@ -377,6 +418,7 @@ fn build_ui(app: &Application) {
         let operation_clone = operation.clone();
         let waiting_for_operand_clone = waiting_for_operand.clone();
         let evaluate = evaluate.clone();
+        let apply_operation = apply_operation.clone();
 
         let key_controller = gtk4::EventControllerKey::new();
         key_controller.connect_key_pressed(move |_, key, _, _| {
@@ -389,15 +431,6 @@ fn build_ui(app: &Application) {
                 }
                 current_input_clone.borrow_mut().push_str(digit);
                 display_clone.set_text(&current_input_clone.borrow());
-            };
-
-            let handle_op = |op: Operation| {
-                let input = current_input_clone.borrow().clone();
-                if let Ok(number) = input.parse::<f64>() {
-                    *first_number_clone.borrow_mut() = number;
-                    *operation_clone.borrow_mut() = Some(op);
-                    *waiting_for_operand_clone.borrow_mut() = true;
-                }
             };
 
             match key {
@@ -420,10 +453,10 @@ fn build_ui(app: &Application) {
                     }
                     display_clone.set_text(&current_input_clone.borrow());
                 }
-                Key::plus | Key::KP_Add => handle_op(Operation::Add),
-                Key::minus | Key::KP_Subtract => handle_op(Operation::Subtract),
-                Key::asterisk | Key::KP_Multiply => handle_op(Operation::Multiply),
-                Key::slash | Key::KP_Divide => handle_op(Operation::Divide),
+                Key::plus | Key::KP_Add => apply_operation(Operation::Add),
+                Key::minus | Key::KP_Subtract => apply_operation(Operation::Subtract),
+                Key::asterisk | Key::KP_Multiply => apply_operation(Operation::Multiply),
+                Key::slash | Key::KP_Divide => apply_operation(Operation::Divide),
                 Key::Return | Key::KP_Enter | Key::equal | Key::KP_Equal => evaluate(),
                 Key::Escape | Key::Delete | Key::c | Key::C => {
                     display_clone.set_text("0");
