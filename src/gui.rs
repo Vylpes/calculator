@@ -302,11 +302,17 @@ fn build_ui(app: &Application) {
                 return;
             };
 
+            // Snapshot RefCell state first — temporaries from .borrow() in `if`/`match`
+            // scrutinees live for the whole expression and panic on later borrow_mut.
+            let waiting = *waiting_for_operand.borrow();
+            let pending = operation.borrow().clone();
+            let first = *first_number.borrow();
+
             // If an operation is pending and a new operand was entered, fold it in
             // left-to-right before starting the next operation.
-            if !*waiting_for_operand.borrow() {
-                if let Some(pending) = operation.borrow().clone() {
-                    match calculator.calculate(*first_number.borrow(), number, pending) {
+            if !waiting {
+                if let Some(pending_op) = pending {
+                    match calculator.calculate(first, number, pending_op) {
                         Ok(result) => {
                             let result_str = if result.fract() == 0.0 {
                                 format!("{}", result as i64)
@@ -329,7 +335,7 @@ fn build_ui(app: &Application) {
                 } else {
                     *first_number.borrow_mut() = number;
                 }
-            } else if operation.borrow().is_none() {
+            } else if pending.is_none() {
                 *first_number.borrow_mut() = number;
             }
             // else: consecutive operators — keep first_number, replace pending op
