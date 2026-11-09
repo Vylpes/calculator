@@ -33,22 +33,41 @@ impl Calculator {
     }
 
     pub fn evaluate(&self, expression: &str) -> Result<f64, CalculatorError> {
-        let expression = expression.trim();
-        
-        // Simple parser for basic arithmetic expressions like "2 + 3"
-        let parts: Vec<&str> = expression.split_whitespace().collect();
-        
-        if parts.len() != 3 {
+        // Ignore whitespace so "2+3", "2 + 3", and "2  +  3" all parse the same.
+        let compact: String = expression.chars().filter(|c| !c.is_whitespace()).collect();
+
+        if compact.is_empty() {
             return Err(CalculatorError::InvalidExpression);
         }
 
-        let left = parts[0].parse::<f64>()
-            .map_err(|_| CalculatorError::InvalidNumber(parts[0].to_string()))?;
-        
-        let operator = parts[1];
-        
-        let right = parts[2].parse::<f64>()
-            .map_err(|_| CalculatorError::InvalidNumber(parts[2].to_string()))?;
+        // Find the binary operator. Skip index 0 so a leading '-' stays part of the left number.
+        let op_pos = compact
+            .char_indices()
+            .skip(1)
+            .find_map(|(i, ch)| match ch {
+                '+' | '-' | '*' | '/' => Some(i),
+                _ => None,
+            });
+
+        let Some(op_pos) = op_pos else {
+            return Err(CalculatorError::InvalidExpression);
+        };
+
+        let left_str = &compact[..op_pos];
+        let operator = &compact[op_pos..op_pos + 1];
+        let right_str = &compact[op_pos + 1..];
+
+        if left_str.is_empty() || right_str.is_empty() {
+            return Err(CalculatorError::InvalidExpression);
+        }
+
+        let left = left_str
+            .parse::<f64>()
+            .map_err(|_| CalculatorError::InvalidNumber(left_str.to_string()))?;
+
+        let right = right_str
+            .parse::<f64>()
+            .map_err(|_| CalculatorError::InvalidNumber(right_str.to_string()))?;
 
         let operation = match operator {
             "+" => Operation::Add,
