@@ -16,7 +16,7 @@ pub struct Cli {
 pub enum Commands {
     /// Run in CLI mode with expression
     Cli {
-        /// Expression to evaluate (e.g., "2 + 3")
+        /// Expression to evaluate (e.g., "2 + 3" or "2+3")
         expression: Option<String>,
     },
     /// Run in GUI mode (default)
@@ -44,7 +44,7 @@ pub fn run_cli_mode(expression: Option<String>) -> Result<(), Box<dyn std::error
 
 fn run_interactive_mode(calculator: &Calculator) -> Result<(), Box<dyn std::error::Error>> {
     println!("Calculator CLI - Interactive Mode");
-    println!("Enter expressions like '2 + 3' or 'quit' to exit");
+    println!("Enter expressions like '2 + 3' or '2+3' (spaces optional), or 'quit' to exit");
     println!("Use Up/Down arrow keys to cycle through this session's history");
 
     // In-memory history only: do not load or save a history file.
