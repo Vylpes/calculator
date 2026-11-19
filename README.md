@@ -91,6 +91,21 @@ The calculator handles various error cases:
 - Invalid expressions: `Error: Invalid expression`
 - Invalid numbers: `Error: Invalid number 'abc'`
 
+## Arch package (desktop launcher)
+
+After installing the `vyxcalc` Arch package (`pacman -U vyxcalc-*.pkg.tar.zst`), confirm desktop integration:
+
+1. Check the launcher file exists: `/usr/share/applications/com.vylpes.vyxcalc.desktop`
+2. Check the icon exists: `/usr/share/icons/hicolor/128x128/apps/com.vylpes.vyxcalc.png`
+3. Open your desktop environment’s application menu, search for **Vyxcalc**, and confirm the branded icon appears
+4. Launch from the menu — the GUI should open (same as running `vyxcalc` with no arguments)
+
+If the menu icon looks missing after install, refresh the icon cache or log out/in:
+
+```bash
+gtk-update-icon-cache /usr/share/icons/hicolor
+```
+
 ## Testing
 
 Run the test suite:

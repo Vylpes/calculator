@@ -77,8 +77,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p build
-          cp PKGBUILD LICENSE build/
+          mkdir -p build/assets
+          cp PKGBUILD LICENSE com.vylpes.vyxcalc.desktop build/
+          cp assets/icon.png build/assets/
           cd build
           sed -i "s/^pkgver=.*/pkgver=${GITHUB_REF_NAME#v}/" PKGBUILD
       - name: Build Package

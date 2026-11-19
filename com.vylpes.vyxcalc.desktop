@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Vyxcalc
+Comment=A simple calculator with GUI and CLI modes
+Exec=vyxcalc
+Icon=com.vylpes.vyxcalc
+Categories=Utility;Calculator;
+Terminal=false
