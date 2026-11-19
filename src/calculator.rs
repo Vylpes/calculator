@@ -26,12 +26,12 @@ impl fmt::Display for CalculatorError {
 }
 
 impl Operation {
-    fn from_str(token: &str) -> Option<Operation> {
-        match token {
-            "+" => Some(Operation::Add),
-            "-" => Some(Operation::Subtract),
-            "*" => Some(Operation::Multiply),
-            "/" => Some(Operation::Divide),
+    fn from_char(ch: char) -> Option<Operation> {
+        match ch {
+            '+' => Some(Operation::Add),
+            '-' => Some(Operation::Subtract),
+            '*' => Some(Operation::Multiply),
+            '/' => Some(Operation::Divide),
             _ => None,
         }
     }
@@ -45,32 +45,73 @@ impl Calculator {
     }
 
     pub fn evaluate(&self, expression: &str) -> Result<f64, CalculatorError> {
-        let expression = expression.trim();
-        let parts: Vec<&str> = expression.split_whitespace().collect();
+        // Ignore whitespace so "2+3", "2 + 3", and "2  +  3" all parse the same.
+        let compact: String = expression.chars().filter(|c| !c.is_whitespace()).collect();
 
-        // Expect "number operator number [operator number]..." (odd length, >= 3)
-        if parts.len() < 3 || parts.len() % 2 == 0 {
+        if compact.is_empty() {
             return Err(CalculatorError::InvalidExpression);
         }
 
-        let mut result = parts[0]
-            .parse::<f64>()
-            .map_err(|_| CalculatorError::InvalidNumber(parts[0].to_string()))?;
+        let chars: Vec<char> = compact.chars().collect();
+        let mut i = 0;
+        let has_operator = chars.iter().skip(1).any(|ch| matches!(ch, '+' | '-' | '*' | '/'));
 
-        let mut i = 1;
-        while i < parts.len() {
-            let operation = Operation::from_str(parts[i])
-                .ok_or(CalculatorError::InvalidExpression)?;
+        let mut result = match Self::parse_number(&chars, &mut i) {
+            Ok(n) => n,
+            // No operator at all (e.g. "invalid") → InvalidExpression; otherwise InvalidNumber
+            Err(CalculatorError::InvalidNumber(_)) if !has_operator => {
+                return Err(CalculatorError::InvalidExpression);
+            }
+            Err(e) => return Err(e),
+        };
 
-            let right = parts[i + 1]
-                .parse::<f64>()
-                .map_err(|_| CalculatorError::InvalidNumber(parts[i + 1].to_string()))?;
+        // Expect "number operator number [operator number]..."
+        if i >= chars.len() {
+            return Err(CalculatorError::InvalidExpression);
+        }
 
+        while i < chars.len() {
+            let operation = Operation::from_char(chars[i]).ok_or(CalculatorError::InvalidExpression)?;
+            i += 1;
+
+            if i >= chars.len() {
+                return Err(CalculatorError::InvalidExpression);
+            }
+
+            let right = Self::parse_number(&chars, &mut i)?;
             result = self.calculate(result, right, operation)?;
-            i += 2;
         }
 
         Ok(result)
+    }
+
+    /// Parse a number starting at `i`, advancing `i` past the number.
+    /// Allows an optional leading `-` (unary minus / negative number).
+    fn parse_number(chars: &[char], i: &mut usize) -> Result<f64, CalculatorError> {
+        let start = *i;
+
+        if *i < chars.len() && chars[*i] == '-' {
+            *i += 1;
+        }
+
+        let num_start = *i;
+        while *i < chars.len() && (chars[*i].is_ascii_digit() || chars[*i] == '.') {
+            *i += 1;
+        }
+
+        if *i == num_start {
+            // No digits after optional sign — not a valid number
+            let bad: String = chars[start..chars.len().min(start + 1)].iter().collect();
+            if Operation::from_char(chars.get(start).copied().unwrap_or('\0')).is_some() {
+                return Err(CalculatorError::InvalidExpression);
+            }
+            return Err(CalculatorError::InvalidNumber(bad));
+        }
+
+        let number_str: String = chars[start..*i].iter().collect();
+        number_str
+            .parse::<f64>()
+            .map_err(|_| CalculatorError::InvalidNumber(number_str))
     }
 
     pub fn calculate(&self, left: f64, right: f64, operation: Operation) -> Result<f64, CalculatorError> {
