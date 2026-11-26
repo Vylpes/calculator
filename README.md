@@ -76,13 +76,16 @@ This opens a graphical calculator window with:
 
 ## Expression Format
 
-Expressions must be in the format: `number operator number`
+Expressions are chains of `number operator number ...`. Whitespace is optional
+(`2+3` and `2 + 3` are equivalent). Multiple operations are evaluated
+**left to right** (no operator precedence).
 
 Examples:
-- `2 + 3`
+- `2 + 3` / `2+3`
 - `10.5 - 4.2`
 - `7 * 8`
 - `15 / 3`
+- `5 + 2 * 6` → `42` (evaluated as `(5 + 2) * 6`)
 
 ## Error Handling
 
